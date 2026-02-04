@@ -48,17 +48,20 @@ st.markdown("""
         font-weight: bold;
         font-size: 18px;
     }
-    .stock-card {
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        margin: 10px 0;
+    .otp-box {
+        background: #e3f2fd;
+        border: 2px solid #1976d2;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 20px 0;
     }
-    .header-text {
-        color: #1f77b4;
-        font-size: 24px;
+    .otp-code {
+        font-size: 32px;
         font-weight: bold;
+        color: #1976d2;
+        letter-spacing: 8px;
+        font-family: monospace;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -86,41 +89,137 @@ def init_session_state():
             'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS', 'ICICIBANK.NS',
             'SBIN.NS', 'BHARTIARTL.NS', 'ITC.NS', 'WIPRO.NS', 'LT.NS'
         ]
+    if 'all_stocks_cache' not in st.session_state:
+        st.session_state.all_stocks_cache = None
 
 init_session_state()
 
-# Predefined stocks and mutual funds
-INDIAN_STOCKS = {
-    'NSE': {
-        'RELIANCE.NS': 'Reliance Industries',
-        'TCS.NS': 'Tata Consultancy Services',
-        'HDFCBANK.NS': 'HDFC Bank',
-        'INFY.NS': 'Infosys',
-        'ICICIBANK.NS': 'ICICI Bank',
-        'HINDUNILVR.NS': 'Hindustan Unilever',
-        'SBIN.NS': 'State Bank of India',
-        'BHARTIARTL.NS': 'Bharti Airtel',
-        'ITC.NS': 'ITC Limited',
-        'KOTAKBANK.NS': 'Kotak Mahindra Bank',
-        'LT.NS': 'Larsen & Toubro',
-        'AXISBANK.NS': 'Axis Bank',
-        'ASIANPAINT.NS': 'Asian Paints',
-        'MARUTI.NS': 'Maruti Suzuki',
-        'TITAN.NS': 'Titan Company',
-        'WIPRO.NS': 'Wipro',
-        'TATAMOTORS.NS': 'Tata Motors',
-        'ULTRACEMCO.NS': 'UltraTech Cement',
-        'SUNPHARMA.NS': 'Sun Pharmaceutical',
-        'NESTLEIND.NS': 'Nestle India',
-    },
-    'BSE': {
-        'RELIANCE.BO': 'Reliance Industries',
-        'TCS.BO': 'Tata Consultancy Services',
-        'HDFCBANK.BO': 'HDFC Bank',
-        'INFY.BO': 'Infosys',
-        'ICICIBANK.BO': 'ICICI Bank',
-    }
+# Comprehensive list of NSE stocks
+NSE_STOCKS = {
+    # Top 50 Stocks
+    'RELIANCE.NS': 'Reliance Industries Ltd',
+    'TCS.NS': 'Tata Consultancy Services Ltd',
+    'HDFCBANK.NS': 'HDFC Bank Ltd',
+    'INFY.NS': 'Infosys Ltd',
+    'ICICIBANK.NS': 'ICICI Bank Ltd',
+    'HINDUNILVR.NS': 'Hindustan Unilever Ltd',
+    'SBIN.NS': 'State Bank of India',
+    'BHARTIARTL.NS': 'Bharti Airtel Ltd',
+    'ITC.NS': 'ITC Ltd',
+    'KOTAKBANK.NS': 'Kotak Mahindra Bank Ltd',
+    'LT.NS': 'Larsen & Toubro Ltd',
+    'AXISBANK.NS': 'Axis Bank Ltd',
+    'ASIANPAINT.NS': 'Asian Paints Ltd',
+    'MARUTI.NS': 'Maruti Suzuki India Ltd',
+    'TITAN.NS': 'Titan Company Ltd',
+    'WIPRO.NS': 'Wipro Ltd',
+    'TATAMOTORS.NS': 'Tata Motors Ltd',
+    'ULTRACEMCO.NS': 'UltraTech Cement Ltd',
+    'SUNPHARMA.NS': 'Sun Pharmaceutical Industries Ltd',
+    'NESTLEIND.NS': 'Nestle India Ltd',
+    'BAJFINANCE.NS': 'Bajaj Finance Ltd',
+    'HCLTECH.NS': 'HCL Technologies Ltd',
+    'TECHM.NS': 'Tech Mahindra Ltd',
+    'ONGC.NS': 'Oil & Natural Gas Corporation Ltd',
+    'NTPC.NS': 'NTPC Ltd',
+    'POWERGRID.NS': 'Power Grid Corporation of India Ltd',
+    'ADANIPORTS.NS': 'Adani Ports and Special Economic Zone Ltd',
+    'COALINDIA.NS': 'Coal India Ltd',
+    'TATASTEEL.NS': 'Tata Steel Ltd',
+    'BAJAJFINSV.NS': 'Bajaj Finserv Ltd',
+    'M&M.NS': 'Mahindra & Mahindra Ltd',
+    'DRREDDY.NS': 'Dr. Reddy\'s Laboratories Ltd',
+    'APOLLOHOSP.NS': 'Apollo Hospitals Enterprise Ltd',
+    'DIVISLAB.NS': 'Divi\'s Laboratories Ltd',
+    'CIPLA.NS': 'Cipla Ltd',
+    'EICHERMOT.NS': 'Eicher Motors Ltd',
+    'HEROMOTOCO.NS': 'Hero MotoCorp Ltd',
+    'BRITANNIA.NS': 'Britannia Industries Ltd',
+    'SHREECEM.NS': 'Shree Cement Ltd',
+    'GRASIM.NS': 'Grasim Industries Ltd',
+    'JSWSTEEL.NS': 'JSW Steel Ltd',
+    'HINDALCO.NS': 'Hindalco Industries Ltd',
+    'INDUSINDBK.NS': 'IndusInd Bank Ltd',
+    'BPCL.NS': 'Bharat Petroleum Corporation Ltd',
+    'IOC.NS': 'Indian Oil Corporation Ltd',
+    'TATACONSUM.NS': 'Tata Consumer Products Ltd',
+    'BAJAJ-AUTO.NS': 'Bajaj Auto Ltd',
+    'ADANIENT.NS': 'Adani Enterprises Ltd',
+    'VEDL.NS': 'Vedanta Ltd',
+    'GODREJCP.NS': 'Godrej Consumer Products Ltd',
+    
+    # Mid and Small Cap Stocks
+    'ZOMATO.NS': 'Zomato Ltd',
+    'PAYTM.NS': 'One 97 Communications Ltd (Paytm)',
+    'NYKAA.NS': 'FSN E-Commerce Ventures Ltd (Nykaa)',
+    'POLICYBZR.NS': 'PB Fintech Ltd (PolicyBazaar)',
+    'DMART.NS': 'Avenue Supermarts Ltd (DMart)',
+    'IRCTC.NS': 'Indian Railway Catering and Tourism Corporation Ltd',
+    'ADANIGREEN.NS': 'Adani Green Energy Ltd',
+    'ADANIPOWER.NS': 'Adani Power Ltd',
+    'ADANITRANS.NS': 'Adani Transmission Ltd',
+    'HDFCLIFE.NS': 'HDFC Life Insurance Company Ltd',
+    'SBILIFE.NS': 'SBI Life Insurance Company Ltd',
+    'ICICIPRULI.NS': 'ICICI Prudential Life Insurance Company Ltd',
+    'PNB.NS': 'Punjab National Bank',
+    'BANKBARODA.NS': 'Bank of Baroda',
+    'CANBK.NS': 'Canara Bank',
+    'YESBANK.NS': 'Yes Bank Ltd',
+    'FEDERALBNK.NS': 'Federal Bank Ltd',
+    'IDFCFIRSTB.NS': 'IDFC First Bank Ltd',
+    'BANDHANBNK.NS': 'Bandhan Bank Ltd',
+    'PVR.NS': 'PVR Ltd',
+    'JUBLFOOD.NS': 'Jubilant Foodworks Ltd',
+    'MCDOWELL-N.NS': 'United Spirits Ltd',
+    'DABUR.NS': 'Dabur India Ltd',
+    'MARICO.NS': 'Marico Ltd',
+    'COLPAL.NS': 'Colgate-Palmolive (India) Ltd',
+    'PIDILITIND.NS': 'Pidilite Industries Ltd',
+    'BERGEPAINT.NS': 'Berger Paints India Ltd',
+    'HAVELLS.NS': 'Havells India Ltd',
+    'VOLTAS.NS': 'Voltas Ltd',
+    'DIXON.NS': 'Dixon Technologies (India) Ltd',
+    'RELAXO.NS': 'Relaxo Footwears Ltd',
+    'PAGEIND.NS': 'Page Industries Ltd',
+    'MUTHOOTFIN.NS': 'Muthoot Finance Ltd',
+    'CHOLAFIN.NS': 'Cholamandalam Investment and Finance Company Ltd',
+    'PFC.NS': 'Power Finance Corporation Ltd',
+    'RECLTD.NS': 'REC Ltd',
+    'LICHSGFIN.NS': 'LIC Housing Finance Ltd',
+    'TORNTPHARM.NS': 'Torrent Pharmaceuticals Ltd',
+    'LUPIN.NS': 'Lupin Ltd',
+    'BIOCON.NS': 'Biocon Ltd',
+    'GLAND.NS': 'Gland Pharma Ltd',
+    'ALKEM.NS': 'Alkem Laboratories Ltd',
+    'PERSISTENT.NS': 'Persistent Systems Ltd',
+    'COFORGE.NS': 'Coforge Ltd',
+    'MPHASIS.NS': 'Mphasis Ltd',
+    'LTTS.NS': 'L&T Technology Services Ltd',
+    'LTIM.NS': 'LTIMindtree Ltd',
+    'TATAELXSI.NS': 'Tata Elxsi Ltd',
+    'TVSMOTOR.NS': 'TVS Motor Company Ltd',
+    'ESCORTS.NS': 'Escorts Kubota Ltd',
+    'ASHOKLEY.NS': 'Ashok Leyland Ltd',
+    'MOTHERSON.NS': 'Samvardhana Motherson International Ltd',
+    'BOSCHLTD.NS': 'Bosch Ltd',
+    'EXIDEIND.NS': 'Exide Industries Ltd',
+    'AMBUJACEM.NS': 'Ambuja Cements Ltd',
+    'ACC.NS': 'ACC Ltd',
+    'RAMCOCEM.NS': 'The Ramco Cements Ltd',
+    'JINDALSTEL.NS': 'Jindal Steel & Power Ltd',
+    'SAIL.NS': 'Steel Authority of India Ltd',
+    'NMDC.NS': 'NMDC Ltd',
+    'MOIL.NS': 'MOIL Ltd',
+    'NATIONALUM.NS': 'National Aluminium Company Ltd',
+    'DLF.NS': 'DLF Ltd',
+    'GODREJPROP.NS': 'Godrej Properties Ltd',
+    'OBEROIRLTY.NS': 'Oberoi Realty Ltd',
+    'PRESTIGE.NS': 'Prestige Estates Projects Ltd',
+    'PHOENIXLTD.NS': 'The Phoenix Mills Ltd',
 }
+
+# Add BSE stocks
+BSE_STOCKS = {k.replace('.NS', '.BO'): v for k, v in list(NSE_STOCKS.items())[:30]}
 
 MUTUAL_FUNDS = {
     'SBI Bluechip Fund': {'nav': 75.50, 'returns_1y': 18.5, 'category': 'Large Cap'},
@@ -154,11 +253,17 @@ def validate_phone(phone):
     pattern = r'^[6-9]\d{9}$'
     return re.match(pattern, phone) is not None
 
-def send_otp(contact, contact_type):
-    """Simulate OTP sending"""
-    otp = str(np.random.randint(100000, 999999))
+def generate_otp():
+    """Generate 6-digit OTP"""
+    return str(np.random.randint(100000, 999999))
+
+def send_otp(email, phone):
+    """Simulate OTP sending and return the OTP"""
+    otp = generate_otp()
     st.session_state.otp = otp
     st.session_state.otp_time = datetime.now()
+    st.session_state.otp_email = email
+    st.session_state.otp_phone = phone
     return otp
 
 def verify_otp(entered_otp):
@@ -171,6 +276,34 @@ def verify_otp(entered_otp):
         return False
     
     return entered_otp == st.session_state.otp
+
+def search_stocks(query):
+    """Search stocks by symbol or name"""
+    if not query:
+        return []
+    
+    query = query.upper()
+    results = []
+    
+    # Search in NSE stocks
+    for symbol, name in NSE_STOCKS.items():
+        if query in symbol.upper() or query in name.upper():
+            results.append({
+                'symbol': symbol,
+                'name': name,
+                'exchange': 'NSE'
+            })
+    
+    # Search in BSE stocks
+    for symbol, name in BSE_STOCKS.items():
+        if query in symbol.upper() or query in name.upper():
+            results.append({
+                'symbol': symbol,
+                'name': name,
+                'exchange': 'BSE'
+            })
+    
+    return results[:20]  # Return top 20 results
 
 @st.cache_data(ttl=60)
 def get_stock_data(symbol, period='1d', interval='5m'):
@@ -283,7 +416,6 @@ def place_stock_order(symbol, name, exchange, order_type, quantity, price):
         total_cost = quantity * price
         st.session_state.balance -= total_cost
         
-        # Add to portfolio
         if symbol in st.session_state.portfolio['Symbol'].values:
             idx = st.session_state.portfolio[st.session_state.portfolio['Symbol'] == symbol].index[0]
             existing_qty = st.session_state.portfolio.loc[idx, 'Quantity']
@@ -307,7 +439,6 @@ def place_stock_order(symbol, name, exchange, order_type, quantity, price):
             })
             st.session_state.portfolio = pd.concat([st.session_state.portfolio, new_position], ignore_index=True)
         
-        # Add transaction
         new_transaction = pd.DataFrame({
             'Time': [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
             'Type': ['Debit'],
@@ -331,7 +462,6 @@ def place_stock_order(symbol, name, exchange, order_type, quantity, price):
                 if st.session_state.portfolio.loc[idx, 'Quantity'] == 0:
                     st.session_state.portfolio = st.session_state.portfolio.drop(idx).reset_index(drop=True)
                 
-                # Add transaction
                 new_transaction = pd.DataFrame({
                     'Time': [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
                     'Type': ['Credit'],
@@ -368,7 +498,6 @@ def buy_mutual_fund(fund_name, amount):
     
     st.session_state.balance -= amount
     
-    # Add transaction
     new_transaction = pd.DataFrame({
         'Time': [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
         'Type': ['Debit'],
@@ -395,7 +524,6 @@ def redeem_mutual_fund(fund_name, units):
             
             st.session_state.balance += redemption_amount
             
-            # Add transaction
             new_transaction = pd.DataFrame({
                 'Time': [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
                 'Type': ['Credit'],
@@ -464,15 +592,15 @@ def login_page():
                             st.session_state.logged_in = True
                             st.session_state.user_data = user
                             st.session_state.balance = user.get('balance', 0)
-                            st.success("Login successful!")
+                            st.success("✅ Login successful!")
                             time.sleep(1)
                             st.rerun()
                         else:
-                            st.error("Please verify your email and phone first!")
+                            st.error("❌ Please verify your email and phone first!")
                     else:
-                        st.error("Invalid password!")
+                        st.error("❌ Invalid password!")
                 else:
-                    st.error("Email not registered!")
+                    st.error("❌ Email not registered!")
         
         with col_btn2:
             if st.button("Register", use_container_width=True):
@@ -491,28 +619,26 @@ def register_page():
         phone = st.text_input("📱 Phone Number", placeholder="9876543210", max_chars=10)
         password = st.text_input("🔒 Password", type="password")
         confirm_password = st.text_input("🔒 Confirm Password", type="password")
-        
         pan = st.text_input("🆔 PAN Number", placeholder="ABCDE1234F", max_chars=10)
         
         st.markdown("---")
         
         if st.button("Send OTP", type="primary", use_container_width=True):
             if not name or not email or not phone or not password or not pan:
-                st.error("Please fill all fields!")
+                st.error("❌ Please fill all fields!")
             elif not validate_email(email):
-                st.error("Invalid email format!")
+                st.error("❌ Invalid email format!")
             elif not validate_phone(phone):
-                st.error("Invalid phone number! Must be 10 digits starting with 6-9")
+                st.error("❌ Invalid phone number! Must be 10 digits starting with 6-9")
             elif password != confirm_password:
-                st.error("Passwords don't match!")
+                st.error("❌ Passwords don't match!")
             elif len(password) < 6:
-                st.error("Password must be at least 6 characters!")
+                st.error("❌ Password must be at least 6 characters!")
             elif email in st.session_state.users_db:
-                st.error("Email already registered!")
+                st.error("❌ Email already registered!")
             else:
-                # Send OTP
-                email_otp = send_otp(email, 'email')
-                phone_otp = send_otp(phone, 'phone')
+                # Generate and send OTP
+                otp = send_otp(email, phone)
                 
                 st.session_state.temp_user = {
                     'name': name,
@@ -524,13 +650,13 @@ def register_page():
                     'verified': False
                 }
                 
-                st.success(f"OTP sent to email and phone!")
-                st.info(f"Demo OTP (for testing): {email_otp}")
                 st.session_state.show_otp = True
                 st.rerun()
         
         if st.button("← Back to Login"):
             st.session_state.show_register = False
+            if 'show_otp' in st.session_state:
+                del st.session_state.show_otp
             st.rerun()
 
 def otp_verification_page():
@@ -540,31 +666,62 @@ def otp_verification_page():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.info(f"OTP sent to: {st.session_state.temp_user['email']} and {st.session_state.temp_user['phone']}")
+        st.success(f"✅ OTP has been sent to:")
+        st.info(f"📧 Email: {st.session_state.otp_email}")
+        st.info(f"📱 Phone: {st.session_state.otp_phone}")
         
-        otp = st.text_input("Enter OTP", placeholder="123456", max_chars=6)
+        # Display OTP prominently (for demo/testing purposes)
+        st.markdown(f"""
+        <div class="otp-box">
+            <p style="margin: 0; font-size: 16px; color: #666;">Your OTP Code (Demo)</p>
+            <p class="otp-code">{st.session_state.otp}</p>
+            <p style="margin: 0; font-size: 14px; color: #999;">Valid for 5 minutes</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        if st.button("Verify OTP", type="primary", use_container_width=True):
-            if verify_otp(otp):
-                # Register user
-                user_data = st.session_state.temp_user
-                user_data['verified'] = True
-                st.session_state.users_db[user_data['email']] = user_data
-                
-                st.success("✅ Registration successful! Please login.")
-                st.session_state.show_otp = False
-                st.session_state.show_register = False
-                del st.session_state.temp_user
-                time.sleep(2)
+        st.warning("⚠️ For demo purposes, OTP is displayed above. In production, it would be sent via SMS/Email.")
+        
+        otp = st.text_input("Enter 6-digit OTP", placeholder="123456", max_chars=6)
+        
+        col_verify, col_resend = st.columns(2)
+        
+        with col_verify:
+            if st.button("✅ Verify OTP", type="primary", use_container_width=True):
+                if verify_otp(otp):
+                    # Register user
+                    user_data = st.session_state.temp_user
+                    user_data['verified'] = True
+                    st.session_state.users_db[user_data['email']] = user_data
+                    
+                    st.success("✅ Registration successful! Please login.")
+                    st.balloons()
+                    
+                    # Clean up
+                    st.session_state.show_otp = False
+                    st.session_state.show_register = False
+                    if 'temp_user' in st.session_state:
+                        del st.session_state.temp_user
+                    if 'otp' in st.session_state:
+                        del st.session_state.otp
+                    
+                    time.sleep(2)
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid or expired OTP! Please try again.")
+        
+        with col_resend:
+            if st.button("🔄 Resend OTP", use_container_width=True):
+                otp = send_otp(st.session_state.otp_email, st.session_state.otp_phone)
+                st.success("✅ New OTP sent!")
                 st.rerun()
-            else:
-                st.error("Invalid or expired OTP!")
         
-        if st.button("← Back"):
+        if st.button("← Back to Registration"):
             st.session_state.show_otp = False
+            if 'otp' in st.session_state:
+                del st.session_state.otp
             st.rerun()
 
-# Main App
+# Main App (continuing in next part due to length...)
 def main_app():
     """Main trading application"""
     
@@ -616,7 +773,7 @@ def main_app():
                 
                 col1, col2 = st.columns([2, 1])
                 with col1:
-                    stock_name = INDIAN_STOCKS['NSE'].get(symbol, symbol.replace('.NS', ''))
+                    stock_name = NSE_STOCKS.get(symbol, symbol.replace('.NS', ''))
                     st.write(f"**{stock_name.split()[0]}**")
                 with col2:
                     color = "profit" if change >= 0 else "loss"
@@ -641,9 +798,39 @@ def main_app():
         "📈 Market", "💼 Portfolio", "🎯 Mutual Funds", "💱 Trade", "💰 Funds", "📋 Orders", "⚙️ Settings"
     ])
     
-    # Tab 1: Market
+    # Tab 1: Market with Search
     with tab1:
         st.header("Market Overview")
+        
+        # Stock Search
+        st.subheader("🔍 Search Stocks")
+        search_query = st.text_input("Search by company name or symbol", placeholder="e.g., Reliance, TCS, HDFC or RELIANCE, TCS")
+        
+        if search_query:
+            search_results = search_stocks(search_query)
+            
+            if search_results:
+                st.write(f"**Found {len(search_results)} results:**")
+                
+                for result in search_results:
+                    col1, col2, col3, col4 = st.columns([2, 3, 1, 1])
+                    
+                    with col1:
+                        st.write(f"**{result['symbol'].split('.')[0]}**")
+                    with col2:
+                        st.write(result['name'])
+                    with col3:
+                        st.write(result['exchange'])
+                    with col4:
+                        if st.button("➕", key=f"add_{result['symbol']}", help="Add to watchlist"):
+                            if result['symbol'] not in st.session_state.watchlist:
+                                st.session_state.watchlist.append(result['symbol'])
+                                st.success(f"Added {result['symbol']} to watchlist!")
+                                st.rerun()
+            else:
+                st.info("No stocks found. Try different keywords.")
+        
+        st.markdown("---")
         
         # Indices
         col1, col2, col3 = st.columns(3)
@@ -656,22 +843,31 @@ def main_app():
                 change = ((current - prev) / prev) * 100
                 
                 with [col1, col2, col3][idx]:
-                    st.metric(name, f"₹{current:,.2f}", f"{change:+.2f}%")
+                    st.metric(name, f"{current:,.2f}", f"{change:+.2f}%")
         
         st.markdown("---")
         
-        # Stock selection
-        col1, col2 = st.columns([1, 1])
+        # Stock chart
+        st.subheader("📊 Stock Chart")
         
-        with col1:
-            exchange = st.selectbox("Exchange", ['NSE', 'BSE'])
+        # Quick access to popular stocks
+        popular_stocks = st.radio("Quick Select", 
+                                  ['Custom'] + list(NSE_STOCKS.keys())[:10],
+                                  horizontal=True,
+                                  format_func=lambda x: x if x == 'Custom' else NSE_STOCKS[x].split()[0])
         
-        with col2:
-            stock_options = list(INDIAN_STOCKS[exchange].keys())
-            selected_stock = st.selectbox("Select Stock", stock_options, 
-                                         format_func=lambda x: f"{INDIAN_STOCKS[exchange][x]} ({x.split('.')[0]})")
+        if popular_stocks == 'Custom':
+            col1, col2 = st.columns(2)
+            with col1:
+                exchange_select = st.selectbox("Exchange", ['NSE', 'BSE'], key='chart_exchange')
+            with col2:
+                stock_dict = NSE_STOCKS if exchange_select == 'NSE' else BSE_STOCKS
+                selected_stock = st.selectbox("Select Stock", list(stock_dict.keys()),
+                                            format_func=lambda x: f"{stock_dict[x]} ({x.split('.')[0]})")
+        else:
+            selected_stock = popular_stocks
+            stock_dict = NSE_STOCKS
         
-        # Chart and info
         col1, col2 = st.columns([3, 1])
         
         with col1:
@@ -681,7 +877,7 @@ def main_app():
             stock_data = get_stock_data(selected_stock, period=period, interval=interval_map[period])
             
             if stock_data is not None and not stock_data.empty:
-                chart = create_candlestick_chart(stock_data, INDIAN_STOCKS[exchange][selected_stock])
+                chart = create_candlestick_chart(stock_data, stock_dict.get(selected_stock, selected_stock))
                 st.plotly_chart(chart, use_container_width=True)
             else:
                 st.error("Unable to fetch stock data")
@@ -704,6 +900,8 @@ def main_app():
                         st.session_state.watchlist.append(selected_stock)
                         st.success("Added to watchlist!")
                         st.rerun()
+                else:
+                    st.success("✅ In Watchlist")
     
     # Tab 2: Portfolio
     with tab2:
@@ -712,14 +910,12 @@ def main_app():
         if not st.session_state.portfolio.empty:
             display_df = st.session_state.portfolio.copy()
             
-            # Format columns
             for col in ['Buy Price', 'Current Price', 'Investment', 'Current Value', 'P&L']:
                 display_df[col] = display_df[col].apply(lambda x: f"₹{x:,.2f}")
             display_df['P&L %'] = display_df['P&L %'].apply(lambda x: f"{x:.2f}%")
             
             st.dataframe(display_df, use_container_width=True, hide_index=True)
             
-            # Summary
             st.markdown("---")
             col1, col2, col3, col4 = st.columns(4)
             
@@ -759,7 +955,6 @@ def main_app():
                 
                 st.dataframe(display_mf, use_container_width=True, hide_index=True)
                 
-                # Summary
                 total_invested = st.session_state.mutual_funds['Investment'].sum()
                 total_current = st.session_state.mutual_funds['Current Value'].sum()
                 total_pl = st.session_state.mutual_funds['P&L'].sum()
@@ -799,7 +994,6 @@ def main_app():
             
             st.markdown("---")
             
-            # Redeem
             if not st.session_state.mutual_funds.empty:
                 st.subheader("Redeem Mutual Funds")
                 
@@ -824,80 +1018,105 @@ def main_app():
                             time.sleep(1)
                             st.rerun()
     
-    # Tab 4: Trade
+    # Tab 4: Trade with Search
     with tab4:
         st.header("Place Order")
         
-        col1, col2 = st.columns(2)
+        # Search stocks to trade
+        st.subheader("🔍 Search Stock to Trade")
+        trade_search = st.text_input("Search stock", placeholder="Enter company name or symbol", key="trade_search")
         
-        with col1:
-            st.subheader("Order Details")
-            
-            exchange = st.selectbox("Select Exchange", ['NSE', 'BSE'], key="trade_exchange")
-            stock_list = list(INDIAN_STOCKS[exchange].keys())
-            trade_symbol = st.selectbox("Select Stock", stock_list,
-                                       format_func=lambda x: f"{INDIAN_STOCKS[exchange][x]} ({x.split('.')[0]})",
-                                       key="trade_symbol")
-            
-            stock_name = INDIAN_STOCKS[exchange][trade_symbol]
-            
-            order_type = st.radio("Order Type", ["BUY", "SELL"], horizontal=True)
-            
-            info = get_stock_info(trade_symbol)
-            current_price = info.get('currentPrice', 0) if info else 0
-            
-            st.info(f"💹 Current Market Price: ₹{current_price:.2f}")
+        selected_for_trade = None
         
-        with col2:
-            st.subheader("Quantity & Price")
-            
-            quantity = st.number_input("Quantity", min_value=1, value=1, step=1)
-            price = st.number_input("Price per Share (₹)", min_value=0.01, value=float(current_price), step=0.01)
-            
-            total_value = quantity * price
-            
-            st.write(f"### Total Value: ₹{total_value:,.2f}")
-            
-            if order_type == "BUY":
-                brokerage = total_value * 0.0003  # 0.03% brokerage
-                total_cost = total_value + brokerage
-                st.write(f"Brokerage: ₹{brokerage:.2f}")
-                st.write(f"**Total Cost: ₹{total_cost:,.2f}**")
-                
-                if total_cost > st.session_state.balance:
-                    st.error(f"❌ Insufficient balance! Need ₹{total_cost - st.session_state.balance:,.2f} more")
-                else:
-                    if st.button("🛒 Place Buy Order", type="primary", use_container_width=True):
-                        place_stock_order(trade_symbol, stock_name, exchange, order_type, quantity, price)
-                        st.success(f"✅ Buy order placed for {quantity} shares of {stock_name}")
-                        time.sleep(1)
+        if trade_search:
+            trade_results = search_stocks(trade_search)
+            if trade_results:
+                st.write("**Select stock to trade:**")
+                for result in trade_results[:5]:
+                    if st.button(f"{result['name']} ({result['symbol'].split('.')[0]}) - {result['exchange']}", 
+                               key=f"trade_{result['symbol']}"):
+                        selected_for_trade = result
+                        st.session_state.selected_trade_stock = result
                         st.rerun()
+        
+        if 'selected_trade_stock' in st.session_state:
+            selected_for_trade = st.session_state.selected_trade_stock
+        
+        if selected_for_trade:
+            st.success(f"Selected: **{selected_for_trade['name']}** ({selected_for_trade['symbol']})")
             
-            else:  # SELL
-                can_sell = False
-                if trade_symbol in st.session_state.portfolio['Symbol'].values:
-                    idx = st.session_state.portfolio[st.session_state.portfolio['Symbol'] == trade_symbol].index[0]
-                    available_qty = st.session_state.portfolio.loc[idx, 'Quantity']
-                    
-                    if quantity <= available_qty:
-                        can_sell = True
-                        st.success(f"✅ Available quantity: {available_qty}")
-                    else:
-                        st.error(f"❌ Insufficient quantity! You have {available_qty} shares")
-                else:
-                    st.error("❌ You don't own this stock!")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Order Details")
                 
-                if can_sell:
+                trade_symbol = selected_for_trade['symbol']
+                stock_name = selected_for_trade['name']
+                exchange = selected_for_trade['exchange']
+                
+                order_type = st.radio("Order Type", ["BUY", "SELL"], horizontal=True)
+                
+                info = get_stock_info(trade_symbol)
+                current_price = info.get('currentPrice', 0) if info else 0
+                
+                st.info(f"💹 Current Market Price: ₹{current_price:.2f}")
+            
+            with col2:
+                st.subheader("Quantity & Price")
+                
+                quantity = st.number_input("Quantity", min_value=1, value=1, step=1)
+                price = st.number_input("Price per Share (₹)", min_value=0.01, value=float(current_price), step=0.01)
+                
+                total_value = quantity * price
+                
+                st.write(f"### Total Value: ₹{total_value:,.2f}")
+                
+                if order_type == "BUY":
                     brokerage = total_value * 0.0003
-                    total_credit = total_value - brokerage
+                    total_cost = total_value + brokerage
                     st.write(f"Brokerage: ₹{brokerage:.2f}")
-                    st.write(f"**You will receive: ₹{total_credit:,.2f}**")
+                    st.write(f"**Total Cost: ₹{total_cost:,.2f}**")
                     
-                    if st.button("💸 Place Sell Order", type="primary", use_container_width=True):
-                        place_stock_order(trade_symbol, stock_name, exchange, order_type, quantity, price)
-                        st.success(f"✅ Sell order placed for {quantity} shares of {stock_name}")
-                        time.sleep(1)
-                        st.rerun()
+                    if total_cost > st.session_state.balance:
+                        st.error(f"❌ Insufficient balance! Need ₹{total_cost - st.session_state.balance:,.2f} more")
+                    else:
+                        if st.button("🛒 Place Buy Order", type="primary", use_container_width=True):
+                            place_stock_order(trade_symbol, stock_name, exchange, order_type, quantity, price)
+                            st.success(f"✅ Buy order placed for {quantity} shares of {stock_name}")
+                            if 'selected_trade_stock' in st.session_state:
+                                del st.session_state.selected_trade_stock
+                            time.sleep(1)
+                            st.rerun()
+                
+                else:  # SELL
+                    can_sell = False
+                    if trade_symbol in st.session_state.portfolio['Symbol'].values:
+                        idx = st.session_state.portfolio[st.session_state.portfolio['Symbol'] == trade_symbol].index[0]
+                        available_qty = st.session_state.portfolio.loc[idx, 'Quantity']
+                        
+                        if quantity <= available_qty:
+                            can_sell = True
+                            st.success(f"✅ Available quantity: {available_qty}")
+                        else:
+                            st.error(f"❌ Insufficient quantity! You have {available_qty} shares")
+                    else:
+                        st.error("❌ You don't own this stock!")
+                    
+                    if can_sell:
+                        brokerage = total_value * 0.0003
+                        total_credit = total_value - brokerage
+                        st.write(f"Brokerage: ₹{brokerage:.2f}")
+                        st.write(f"**You will receive: ₹{total_credit:,.2f}**")
+                        
+                        if st.button("💸 Place Sell Order", type="primary", use_container_width=True):
+                            place_stock_order(trade_symbol, stock_name, exchange, order_type, quantity, price)
+                            st.success(f"✅ Sell order placed for {quantity} shares of {stock_name}")
+                            if 'selected_trade_stock' in st.session_state:
+                                del st.session_state.selected_trade_stock
+                            time.sleep(1)
+                            st.rerun()
+        else:
+            st.info("👆 Use the search box above to find and select a stock to trade")
     
     # Tab 5: Funds Management
     with tab5:
@@ -921,8 +1140,8 @@ def main_app():
             st.subheader("💸 Withdraw Funds")
             
             withdraw_amount = st.number_input("Amount to Withdraw (₹)", min_value=100, 
-                                             max_value=float(st.session_state.balance), 
-                                             value=min(1000, float(st.session_state.balance)), 
+                                             max_value=float(st.session_state.balance) if st.session_state.balance > 0 else 100, 
+                                             value=min(1000, float(st.session_state.balance)) if st.session_state.balance >= 100 else 100, 
                                              step=100, key="withdraw_amount")
             withdraw_method = st.selectbox("Withdrawal Method", ['Bank Transfer', 'UPI'], key="withdraw_method")
             
@@ -985,49 +1204,20 @@ def main_app():
         
         st.markdown("---")
         
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("🎨 Preferences")
-            
-            # Theme (placeholder - Streamlit doesn't support dynamic theme changes easily)
-            st.selectbox("Theme", ["Light", "Dark"], disabled=True)
-            st.info("Theme customization coming soon!")
-            
-            # Notifications
-            email_notif = st.checkbox("Email Notifications", value=True)
-            sms_notif = st.checkbox("SMS Notifications", value=True)
-        
-        with col2:
-            st.subheader("🔐 Security")
-            
-            if st.button("Change Password", use_container_width=True):
-                st.info("Password change feature coming soon!")
-            
-            if st.button("Enable 2FA", use_container_width=True):
-                st.info("Two-factor authentication coming soon!")
-        
-        st.markdown("---")
-        
-        # Watchlist Management
         st.subheader("⭐ Manage Watchlist")
         
-        col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            if st.session_state.watchlist:
-                for i, symbol in enumerate(st.session_state.watchlist):
-                    col_a, col_b = st.columns([4, 1])
-                    with col_a:
-                        stock_name = INDIAN_STOCKS['NSE'].get(symbol, symbol)
-                        st.write(f"{i+1}. {stock_name} ({symbol})")
-                    with col_b:
-                        if st.button("❌", key=f"remove_{symbol}"):
-                            st.session_state.watchlist.remove(symbol)
-                            st.rerun()
-        
-        with col2:
-            st.write("Add new stocks from the Market tab")
+        if st.session_state.watchlist:
+            for i, symbol in enumerate(st.session_state.watchlist):
+                col_a, col_b = st.columns([4, 1])
+                with col_a:
+                    stock_name = NSE_STOCKS.get(symbol, BSE_STOCKS.get(symbol, symbol))
+                    st.write(f"{i+1}. {stock_name} ({symbol})")
+                with col_b:
+                    if st.button("❌", key=f"remove_{symbol}"):
+                        st.session_state.watchlist.remove(symbol)
+                        st.rerun()
+        else:
+            st.info("No stocks in watchlist. Add stocks from the Market tab.")
 
 # Main Application Flow
 if not st.session_state.logged_in:
@@ -1044,3 +1234,4 @@ else:
 if st.session_state.logged_in:
     st.markdown("---")
     st.markdown("<p style='text-align: center; color: gray;'>🇮🇳 Indian Stock Trading Platform | NSE • BSE • Mutual Funds | Secure & Reliable</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: gray; font-size: 12px;'>⚠️ Demo Application - For Educational Purposes Only</p>", unsafe_allow_html=True)

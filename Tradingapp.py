@@ -509,9 +509,20 @@ def otp_verification_page():
 
 # Main app
 def main_app():
-    # Market status header
-    badge_html, market_status = get_market_status()
-    badge_html = f'<span class="{"live-indicator" if market_status == "OPEN" else "market-closed"}">{"🟢 LIVE" if market_status == "OPEN" else "🔴 CLOSED"}</span>'
+    """Main trading application with live market updates"""
+    
+    # Market Status Header
+    status, message, next_time, color = get_market_status()
+    
+    # Create badge HTML based on status
+    if status == "OPEN":
+        badge_html = '<span class="live-indicator">🟢 LIVE - Market is Open</span>'
+    elif status == "PRE-MARKET" or status == "POST-MARKET":
+        badge_html = f'<span class="pre-market">🟡 {status}</span>'
+    else:
+        badge_html = f'<span class="market-closed">🔴 CLOSED - Opens {next_time}</span>'
+    
+    market_status = status
     
     col1, col2, col3 = st.columns([2, 2, 1])
     with col1:
